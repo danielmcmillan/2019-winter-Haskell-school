@@ -8,32 +8,37 @@ safeRead x = case reads x of
   [(r, "")] -> Just r
   _         -> Nothing
 
-data MessageTypeResult = MessageTypeSuccess MessageType [String]
-                       | MessageTypeFailure             [String]
-  deriving Show
+getMessageType :: [String] -> Maybe MessageType
+getMessageType ("I"          : _) = Just Info
+getMessageType ("W"          : _) = Just Warning
+getMessageType ("E" : lvlStr : _) = case safeRead lvlStr of
+  Just lvl -> Just $ Error lvl
+  Nothing  -> Nothing
+getMessageType _ = Nothing
 
-extractMessageType :: [String] -> MessageTypeResult
-extractMessageType (     "I"          : msg) = MessageTypeSuccess Info msg
-extractMessageType (     "W"          : msg) = MessageTypeSuccess Warning msg
-extractMessageType msg'@("E" : lvlStr : msg) = case safeRead lvlStr of
-  Just lvl -> MessageTypeSuccess (Error lvl) msg
-  Nothing  -> MessageTypeFailure msg'
-extractMessageType msg = MessageTypeFailure msg
+getMessageTsStr :: [String] -> Maybe String
+getMessageTsStr ("E" : _ : tsStr : _) = Just tsStr
+getMessageTsStr (_       : tsStr : _) = Just tsStr
+getMessageTsStr _                     = Nothing
 
-parseMessageOfType :: MessageTypeResult -> LogMessage
-parseMessageOfType (MessageTypeFailure msg) = Unknown $ unwords msg
-parseMessageOfType (MessageTypeSuccess msgType msg'@(tsStr : msg)) =
-  case (safeRead tsStr :: Maybe TimeStamp) of
-    Just ts -> LogMessage msgType ts (unwords msg)
-    Nothing -> Unknown (unwords msg')
-parseMessageOfType (MessageTypeSuccess _ msg) = Unknown $ unwords msg
+getMessageTs :: [String] -> Maybe TimeStamp
+getMessageTs msg = case getMessageTsStr msg of
+  Just tsStr -> safeRead tsStr
+  Nothing    -> Nothing
+
+getMessageTextArr :: [String] -> [String]
+getMessageTextArr ("E" : rest) = drop 2 rest
+getMessageTextArr msg          = drop 2 msg
+
+getMessageText :: [String] -> String
+getMessageText = unwords . getMessageTextArr
 
 parseMessage :: String -> LogMessage
-parseMessage = parseMessageOfType . extractMessageType . words
+parseMessage msg =
+  let msgArr = words msg
+  in  case (getMessageType msgArr, getMessageTs msgArr) of
+        (Just msgType, Just msgTs) -> LogMessage msgType msgTs (getMessageText msgArr)
+        _                          -> Unknown msg
 
--- (I | W | E Int) Int ...
-
--- parseMessage "E 2 562 help help" == LogMessage (Error 2) 562 "help help"
--- parseMessage "I 29 la la la" == LogMessage Info 29 "la la la"
--- parseMessage "This is not in the right format" == Unknown "This is not in the right format"
--- parseMessage "I 29 la la la" == Unknown "I 29 la la la"
+parseFile :: String -> [LogMessage]
+parseFile x = map parseMessage (lines x)
