@@ -24,9 +24,9 @@ main = hspec $ do
     it "should be Unknown for an invalid timestamp" $
       parseMessage "I ab la la" `shouldBe` Unknown "I ab la la"
 
-  describe "parseFile" $
+  describe "parse" $
     it "should parse a file of log messages" $
-      parseFile "I 1 ab\nE 2 5 error" `shouldBe` [
+      parse "I 1 ab\nE 2 5 error" `shouldBe` [
         LogMessage Info 1 "ab",
         LogMessage (Error 2) 5 "error"
       ]

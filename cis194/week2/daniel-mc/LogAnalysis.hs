@@ -8,6 +8,8 @@ safeRead x = case reads x of
   [(r, "")] -> Just r
   _         -> Nothing
 
+-- Exercise 1
+
 getMessageType :: [String] -> Maybe MessageType
 getMessageType ("I"          : _) = Just Info
 getMessageType ("W"          : _) = Just Warning
@@ -40,5 +42,45 @@ parseMessage msg =
         (Just msgType, Just msgTs) -> LogMessage msgType msgTs (getMessageText msgArr)
         _                          -> Unknown msg
 
-parseFile :: String -> [LogMessage]
-parseFile x = map parseMessage (lines x)
+parse :: String -> [LogMessage]
+parse x = map parseMessage (lines x)
+
+-- Exercise 2
+
+insert :: LogMessage -> MessageTree -> MessageTree
+insert msg@LogMessage{} Leaf = Node Leaf msg Leaf
+insert msg@(LogMessage _ ts _) (Node left root@(LogMessage _ ts' _) right)
+  | ts < ts'  = Node (insert msg left) root right
+  | otherwise = Node left root (insert msg right)
+insert _ mt = mt
+
+-- Exercise 3
+
+build :: [LogMessage] -> MessageTree
+build = foldr insert Leaf
+
+-- Exercise 4
+
+inOrder :: MessageTree -> [LogMessage]
+inOrder Leaf                   = []
+inOrder (Node left root right) = inOrder left ++ [root] ++ inOrder right
+
+-- Exercise 5
+
+filterRelevantInfo :: [LogMessage] -> [LogMessage]
+filterRelevantInfo [] = []
+filterRelevantInfo (x : xs) =
+  let rest = filterRelevantInfo xs
+  in  case x of
+        (LogMessage (Error lvl) _ _) | lvl >= 50 -> x : rest
+                                     | otherwise -> rest
+        _ -> rest
+
+-- gets message strings for LogMessages, ignoring Unknown
+getMessages :: [LogMessage] -> [String]
+getMessages (LogMessage _ _ msg : rest) = msg : getMessages rest
+getMessages (_                  : rest) = getMessages rest
+getMessages _                           = []
+
+whatWentWrong :: [LogMessage] -> [String]
+whatWentWrong = getMessages . inOrder . build . filterRelevantInfo
