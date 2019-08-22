@@ -20,24 +20,24 @@ parseTsMsg :: [String] -> Maybe (TimeStamp, String)
 parseTsMsg ((safeRead -> Just ts) : rest) = Just (ts, unwords rest)
 parseTsMsg _                              = Nothing
 
-parseMessageArray :: [String] -> LogMessage
-parseMessageArray (parseMessageType -> Just (msgType, parseTsMsg -> Just (ts, msg))) =
+parseMessageWords :: [String] -> LogMessage
+parseMessageWords (parseMessageType -> Just (msgType, parseTsMsg -> Just (ts, msg))) =
   LogMessage msgType ts msg
-parseMessageArray msg = Unknown (unwords msg)
+parseMessageWords msg = Unknown (unwords msg)
 
 parseMessage :: String -> LogMessage
-parseMessage = parseMessageArray . words
+parseMessage = parseMessageWords . words
 
 parse :: String -> [LogMessage]
-parse x = map parseMessage (lines x)
+parse = map parseMessage . lines
 
 -- Exercise 2
 
 insert :: LogMessage -> MessageTree -> MessageTree
 insert msg@LogMessage{} Leaf = Node Leaf msg Leaf
 insert msg@(LogMessage _ ts _) (Node left root@(LogMessage _ rootTs _) right)
-  | ts < rootTs  = Node (insert msg left) root right
-  | otherwise = Node left root (insert msg right)
+  | ts < rootTs = Node (insert msg left) root right
+  | otherwise   = Node left root (insert msg right)
 insert _ mt = mt
 
 -- Exercise 3
@@ -57,9 +57,9 @@ isRelevantInfo :: LogMessage -> Bool
 isRelevantInfo (LogMessage (Error level) _ _) = level >= 50
 isRelevantInfo _                              = False
 
-getMessage :: LogMessage -> String
-getMessage (LogMessage _ _ msg) = msg
-getMessage (Unknown msg) = msg
+addMessageIfRelevant :: LogMessage -> [String] -> [String]
+addMessageIfRelevant lm@(LogMessage _ _ msg) msgs | isRelevantInfo lm = msg : msgs
+addMessageIfRelevant _ msgs = msgs
 
 whatWentWrong :: [LogMessage] -> [String]
-whatWentWrong = map getMessage . inOrder . build . filter isRelevantInfo
+whatWentWrong = foldr addMessageIfRelevant [] . inOrder . build
