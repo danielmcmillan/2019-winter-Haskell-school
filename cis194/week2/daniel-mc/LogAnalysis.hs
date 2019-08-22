@@ -3,44 +3,30 @@ module LogAnalysis where
 
 import           Log
 
+-- Exercise 1
+
 safeRead :: Read a => String -> Maybe a
 safeRead x = case reads x of
   [(r, "")] -> Just r
   _         -> Nothing
 
--- Exercise 1
+parseMessageType :: [String] -> Maybe (MessageType, [String])
+parseMessageType ("E" : (safeRead -> Just level) : rest) = Just (Error level, rest)
+parseMessageType ("W" : rest) = Just (Warning, rest)
+parseMessageType ("I" : rest) = Just (Info, rest)
+parseMessageType _ = Nothing
 
-getMessageType :: [String] -> Maybe MessageType
-getMessageType ("I"          : _) = Just Info
-getMessageType ("W"          : _) = Just Warning
-getMessageType ("E" : lvlStr : _) = case safeRead lvlStr of
-  Just lvl -> Just $ Error lvl
-  Nothing  -> Nothing
-getMessageType _ = Nothing
+parseTsMsg :: [String] -> Maybe (TimeStamp, String)
+parseTsMsg ((safeRead -> Just ts) : rest) = Just (ts, unwords rest)
+parseTsMsg _                              = Nothing
 
-getMessageTsStr :: [String] -> Maybe String
-getMessageTsStr ("E" : _ : tsStr : _) = Just tsStr
-getMessageTsStr (_       : tsStr : _) = Just tsStr
-getMessageTsStr _                     = Nothing
-
-getMessageTs :: [String] -> Maybe TimeStamp
-getMessageTs msg = case getMessageTsStr msg of
-  Just tsStr -> safeRead tsStr
-  Nothing    -> Nothing
-
-getMessageTextArr :: [String] -> [String]
-getMessageTextArr ("E" : rest) = drop 2 rest
-getMessageTextArr msg          = drop 2 msg
-
-getMessageText :: [String] -> String
-getMessageText = unwords . getMessageTextArr
+parseMessageArray :: [String] -> LogMessage
+parseMessageArray (parseMessageType -> Just (msgType, parseTsMsg -> Just (ts, msg))) =
+  LogMessage msgType ts msg
+parseMessageArray msg = Unknown (unwords msg)
 
 parseMessage :: String -> LogMessage
-parseMessage msg =
-  let msgArr = words msg
-  in  case (getMessageType msgArr, getMessageTs msgArr) of
-        (Just msgType, Just msgTs) -> LogMessage msgType msgTs (getMessageText msgArr)
-        _                          -> Unknown msg
+parseMessage = parseMessageArray . words
 
 parse :: String -> [LogMessage]
 parse x = map parseMessage (lines x)
@@ -49,8 +35,8 @@ parse x = map parseMessage (lines x)
 
 insert :: LogMessage -> MessageTree -> MessageTree
 insert msg@LogMessage{} Leaf = Node Leaf msg Leaf
-insert msg@(LogMessage _ ts _) (Node left root@(LogMessage _ ts' _) right)
-  | ts < ts'  = Node (insert msg left) root right
+insert msg@(LogMessage _ ts _) (Node left root@(LogMessage _ rootTs _) right)
+  | ts < rootTs  = Node (insert msg left) root right
   | otherwise = Node left root (insert msg right)
 insert _ mt = mt
 
@@ -67,20 +53,13 @@ inOrder (Node left root right) = inOrder left ++ [root] ++ inOrder right
 
 -- Exercise 5
 
-filterRelevantInfo :: [LogMessage] -> [LogMessage]
-filterRelevantInfo [] = []
-filterRelevantInfo (x : xs) =
-  let rest = filterRelevantInfo xs
-  in  case x of
-        (LogMessage (Error lvl) _ _) | lvl >= 50 -> x : rest
-                                     | otherwise -> rest
-        _ -> rest
+isRelevantInfo :: LogMessage -> Bool
+isRelevantInfo (LogMessage (Error level) _ _) = level >= 50
+isRelevantInfo _                              = False
 
--- gets message strings for LogMessages, ignoring Unknown
-getMessages :: [LogMessage] -> [String]
-getMessages (LogMessage _ _ msg : rest) = msg : getMessages rest
-getMessages (_                  : rest) = getMessages rest
-getMessages _                           = []
+getMessage :: LogMessage -> String
+getMessage (LogMessage _ _ msg) = msg
+getMessage (Unknown msg) = msg
 
 whatWentWrong :: [LogMessage] -> [String]
-whatWentWrong = getMessages . inOrder . build . filterRelevantInfo
+whatWentWrong = map getMessage . inOrder . build . filter isRelevantInfo
