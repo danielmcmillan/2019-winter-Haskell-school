@@ -1,18 +1,21 @@
 {-# OPTIONS_GHC -Wall #-}
+module Golf
+  ( skips
+  , localMaxima
+  , histogram
+  )
+where
 
 -- Exercise 1
 
--- Filter list to every nth element, starting from the first
-everyNth :: Int -> [a] -> [a]
-everyNth n (x : xs) = x : everyNth n (drop (n - 1) xs)
-everyNth _ _        = []
-
-skipsN :: Int -> [a] -> [[a]]
-skipsN n x@(_ : ys) = everyNth n x : skipsN (n + 1) ys
-skipsN _ _          = []
+-- Filter a list to every nth element
+skipN :: [a] -> Int -> [a]
+skipN x n = case drop (n - 1) x of
+  (y : ys) -> y : skipN ys n
+  _        -> []
 
 skips :: [a] -> [[a]]
-skips = skipsN 1
+skips x = map (skipN x) [1 .. (length x)]
 
 -- Exercise 2
 
@@ -23,22 +26,24 @@ localMaxima _ = []
 
 -- Exercise 3
 
+-- Count how many times a value appears in a list
 count :: Eq a => a -> [a] -> Int
 count x = length . filter (== x)
 
-counts :: [Integer] -> [Int]
-counts x = map (`count` x) [0 .. 9]
+-- Get histogram as a list
+hList :: [Integer] -> [Int]
+hList x = map (`count` x) [0 .. 9]
 
-histogramChar :: Bool -> Char
-histogramChar True  = '*'
-histogramChar False = ' '
+hChar :: Bool -> Char
+hChar True = '*'
+hChar _    = ' '
 
-histogramLine :: [Int] -> Int -> String
-histogramLine cs x = map (histogramChar . (>= x)) cs
+-- Get nth line for histogram string with counts h
+hLine :: [Int] -> Int -> String
+hLine h n = map (hChar . (>= n)) h
 
-histogramLines :: [Int] -> Int -> [String]
-histogramLines cs x@(histogramLine cs -> l) | l /= replicate 10 ' ' = l : histogramLines cs (x + 1)
-                                            | otherwise             = []
+histogramLines :: [Int] -> [String]
+histogramLines x = map (hLine x) [1 .. (foldr max 0 x)]
 
 histogram :: [Integer] -> String
-histogram ds = unlines . reverse $ (['0' .. '9'] : replicate 10 '=' : histogramLines (counts ds) 1)
+histogram x = unlines . reverse $ ['0' .. '9'] : replicate 10 '=' : (histogramLines . hList $ x)
