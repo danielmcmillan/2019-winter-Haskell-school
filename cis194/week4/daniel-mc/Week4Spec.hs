@@ -21,3 +21,8 @@ module Week4Spec where
       it "should return 40 for 3" $ fun2 3 `shouldBe` 40
       it "should return 46 for 6" $ fun2 6 `shouldBe` 46
       it "should return 234 for 7" $ fun2 7 `shouldBe` 234
+
+    describe "foldTree" $ do
+      it "should return Leaf for an empty list" $ foldTree "" `shouldBe` Leaf
+
+      it "should return single Node for single item" $ foldTree "A" `shouldBe` Node 0 Leaf 'A' Leaf
