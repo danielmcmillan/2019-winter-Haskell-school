@@ -8,6 +8,7 @@ module Week4
   , xor
   , map'
   , myFoldl
+  , sieveSundaram
   )
 where
 
@@ -58,3 +59,10 @@ map' f = foldr (\x r -> f x : r) []
 
 myFoldl :: (b -> a -> b) -> b -> [a] -> b
 myFoldl f base xs = foldr (flip f) base (reverse xs)
+
+-- Exercise 4
+-- i + j + 2ij <= n ==> j <= (n - i)/(1 + 2i)
+sieveSundaram :: Integer -> [Integer]
+sieveSundaram n =
+  let np = [ i + j + 2 * i * j | i <- [1 .. n], j <- [i .. ((n - i) `div` (1 + 2 * i))] ]
+  in  map ((+ 1) . (* 2)) . filter (not . (`elem` np)) $ [1 .. n]
