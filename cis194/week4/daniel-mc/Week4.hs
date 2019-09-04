@@ -5,6 +5,9 @@ module Week4
   , insert
   , Tree(Leaf, Node)
   , foldTree
+  , xor
+  , map'
+  , myFoldl
   )
 where
 
@@ -45,3 +48,13 @@ insert x (Node _ l v r)
 
 foldTree :: [a] -> Tree a
 foldTree = foldr insert Leaf
+
+-- Exercise 3
+xor :: [Bool] -> Bool
+xor = foldr (/=) False
+
+map' :: (a -> b) -> [a] -> [b]
+map' f = foldr (\x r -> f x : r) []
+
+myFoldl :: (b -> a -> b) -> b -> [a] -> b
+myFoldl f base xs = foldr (flip f) base (reverse xs)

@@ -26,3 +26,14 @@ module Week4Spec where
       it "should return Leaf for an empty list" $ foldTree "" `shouldBe` Leaf
 
       it "should return single Node for single item" $ foldTree "A" `shouldBe` Node 0 Leaf 'A' Leaf
+
+    describe "xor" $ do
+      it "should return False for an empty list" $ xor [] `shouldBe` False
+      it "should return True for a single True" $ xor [True] `shouldBe` True
+      it "should return False for two True" $ xor [True, True] `shouldBe` False
+      it "should return True for three True" $ xor [True, True, True] `shouldBe` True
+      it "should ignore False values" $ xor [False, True, False, True, True, False] `shouldBe` True
+
+    describe "myFoldl" $
+      it "should be same as foldl" $
+        myFoldl (flip (:)) [] "abc" `shouldBe` "cba"
