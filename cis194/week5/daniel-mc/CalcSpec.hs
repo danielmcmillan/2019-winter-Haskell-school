@@ -17,3 +17,7 @@ main = hspec $ do
 
     it "should work for a valid expression" $
       evalStr "2+3*4" `shouldBe` Just 14
+
+  describe "Expr" $
+    it "should have working ExprT instance" $
+      (add (lit 1) (mul (lit 2) (lit 3)) :: ExprT) `shouldBe` Add (Lit 1) (Mul (Lit 2) (Lit 3))
