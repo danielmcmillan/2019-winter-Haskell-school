@@ -1,9 +1,13 @@
 module CalcSpec where
 
+import qualified Data.Map                      as M
 import           Calc
 import           ExprT
+import qualified StackVM                       as VM
 
 import           Test.Hspec
+
+deriving instance Eq VM.StackExp
 
 main :: IO ()
 main = hspec $ do
@@ -50,3 +54,21 @@ main = hspec $ do
 
     it "mul should mod 7 result" $
       mul (Mod7 5) (Mod7 2) `shouldBe` Mod7 3
+
+  describe "compile" $
+    it "should convert string to StackVM program" $
+      compile "(4+2)*(1+3)"
+      `shouldBe` Just [VM.PushI 4, VM.PushI 2, VM.Add, VM.PushI 1, VM.PushI 3, VM.Add, VM.Mul]
+
+  describe "(Expr, HasVars) (M.Map String Integer -> Maybe Integer)" $ do
+    it "should get variable from map" $
+      (var "x" :: M.Map String Integer -> Maybe Integer) (M.fromList [("x", 5)])
+      `shouldBe` Just 5
+
+    it "should be Nothing when variable is missing" $
+      (var "x" :: M.Map String Integer -> Maybe Integer) (M.fromList [("y", 5)])
+      `shouldBe` Nothing
+
+    it "should support lit, add, mul" $
+      (add (lit 5) (mul (lit 4) (var "x")) :: M.Map String Integer -> Maybe Integer) (M.fromList [("x", 3)])
+      `shouldBe` Just 17
