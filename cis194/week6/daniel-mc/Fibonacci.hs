@@ -11,6 +11,7 @@ module Fibonacci
   , streamFromSeed
   , nats
   , ruler
+  , fibs3
   )
 where
 
@@ -66,3 +67,21 @@ rulerGen x = interleaveStreams (streamRepeat x) (rulerGen $ x + 1)
 
 ruler :: Stream Integer
 ruler = rulerGen 0
+
+-- Exercise 6
+
+x :: Stream Integer
+x = Stream 0 $ Stream 1 $ streamRepeat 0
+
+instance Num (Stream Integer) where
+  fromInteger n = Stream n $ streamRepeat 0
+  negate = streamMap negate
+  (Stream a as) + (Stream b bs) = Stream (a + b) (as + bs)
+  (Stream a as) * bigB@(Stream b bs) = Stream (a * b) (streamMap (* a) bs + as * bigB)
+
+instance Fractional (Stream Integer) where
+  bigA@(Stream a as) / bigB@(Stream b bs) =
+    Stream (div a b) (streamMap (`div` b) (as - (bigA / bigB) * bs))
+
+fibs3 :: Stream Integer
+fibs3 = x / (1 - x - x ^ 2)
