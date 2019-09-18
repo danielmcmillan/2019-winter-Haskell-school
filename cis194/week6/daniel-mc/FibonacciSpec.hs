@@ -19,3 +19,7 @@ module FibonacciSpec where
     describe "fibs3" $
       it "is correct for the first ten numbers" $
         (take 10 . streamToList $ fibs3) `shouldBe` [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+
+    describe "fibs4" $
+      it "is correct for the first ten numbers" $
+        (take 10 . streamToList $ fibs4) `shouldBe` [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]

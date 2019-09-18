@@ -12,6 +12,7 @@ module Fibonacci
   , nats
   , ruler
   , fibs3
+  , fibs4
   )
 where
 
@@ -85,3 +86,18 @@ instance Fractional (Stream Integer) where
 
 fibs3 :: Stream Integer
 fibs3 = x / (1 - x - x ^ 2)
+
+-- Exercise 7
+data Matrix = Matrix Integer Integer Integer Integer deriving (Show)
+
+instance Num Matrix where
+  (Matrix x0 x1 x2 x3) * (Matrix y0 y1 y2 y3) =
+    Matrix (x0 * y0 + x1 * y2) (x0 * y1 + x1 * y3) (x2 * y0 + x3 * y2) (x2 * y1 + x3 * y3)
+
+fib4 :: Integer -> Integer
+fib4 0 = 0
+fib4 n = case Matrix 1 1 1 0 ^ n of
+  (Matrix _ _ u _) -> u
+
+fibs4 :: Stream Integer
+fibs4 = streamMap fib4 nats
