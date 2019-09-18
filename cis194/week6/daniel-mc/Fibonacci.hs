@@ -45,13 +45,13 @@ instance Show a => Show (Stream a) where
 
 -- Exercise 4
 streamRepeat :: a -> Stream a
-streamRepeat x = Stream x (streamRepeat x)
+streamRepeat x = Stream x $ streamRepeat x
 
 streamMap :: (a -> b) -> Stream a -> Stream b
-streamMap f (Stream x xs) = Stream (f x) (streamMap f xs)
+streamMap f (Stream x xs) = Stream (f x) $ streamMap f xs
 
 streamFromSeed :: (a -> a) -> a -> Stream a
-streamFromSeed f x = Stream x (streamFromSeed f (f x))
+streamFromSeed f x = Stream x . streamFromSeed f . f $ x
 
 -- Exercise 5
 nats :: Stream Integer
