@@ -1,7 +1,8 @@
 module JoinListSpec where
 
   import           JoinList
-  import Data.Monoid(Sum(..))
+  import           Sized
+  import           Data.Monoid(Sum(..))
 
   import           Test.Hspec
 
@@ -18,3 +19,18 @@ module JoinListSpec where
       it "appends tree" $
         Empty +++ Append (Sum 30) (Single (Sum 10) 1) (Single (Sum 20) 2)
         `shouldBe` Append (Sum 30) Empty (Append (Sum 30) (Single (Sum 10) 1) (Single (Sum 20) 2))
+
+    describe "indexJ" $ do
+      it "retrieves item correctly" $
+        indexJ 2 (Single (Size 1) "a" +++ Single (Size 1) "b" +++ Single (Size 1) "c")
+        `shouldBe` Just "c"
+
+    describe "dropJ" $ do
+      it "drops items correctly" $
+        dropJ 2 (Single (Size 1) "a" +++ Single (Size 1) "b" +++ Single (Size 1) "c")
+        `shouldBe` Single 1 "c"
+
+    describe "takeJ" $ do
+      it "takes items correctly" $
+        takeJ 2 (Single (Size 1) "a" +++ Single (Size 1) "b" +++ Single (Size 1) "c")
+        `shouldBe` Single (Size 1) "a" +++ Single (Size 1) "b" +++ Empty
