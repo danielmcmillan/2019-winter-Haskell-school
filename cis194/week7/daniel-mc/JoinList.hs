@@ -3,6 +3,7 @@
 
 module JoinList
   ( JoinList(..)
+  , tag
   , (+++)
   , indexJ
   , dropJ
@@ -25,12 +26,14 @@ tag (Single x _  ) = x
 tag (Append x _ _) = x
 
 (+++) :: Monoid m => JoinList m a -> JoinList m a -> JoinList m a
-(+++) x y = Append (tag x <> tag y) x y
+(+++) x     Empty = x
+(+++) Empty y     = y
+(+++) x     y     = Append (tag x <> tag y) x y
 
 -- Exercise 2
 
 instance (Sized m, Monoid m) => Sized (JoinList m a) where
-  size Empty = mempty
+  size Empty          = mempty
   size (Single s _  ) = size s
   size (Append s _ _) = size s
 
@@ -38,8 +41,8 @@ indexJ :: (Sized m, Monoid m) => Int -> JoinList m a -> Maybe a
 indexJ i (Append _ l r) | lSize <= i = indexJ (i - lSize) r
                         | otherwise  = indexJ i l
   where lSize = getSize . size $ l
-indexJ i (Single _ a) | i == 0 = Just a
-indexJ _ _                     = Nothing
+indexJ 0 (Single _ a) = Just a
+indexJ _ _            = Nothing
 
 dropJ :: (Sized m, Monoid m) => Int -> JoinList m a -> JoinList m a
 dropJ n (Append _ l r) | lSize <= n = dropJ (n - lSize) r

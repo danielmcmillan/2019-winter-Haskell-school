@@ -20,6 +20,9 @@ import           JoinList
 newtype Score = Score Int
   deriving (Eq, Ord, Show, Num)
 
+getScore :: Score -> Int
+getScore (Score x) = x
+
 instance Semigroup Score where
   (<>) = (+)
 
@@ -53,7 +56,7 @@ score (toUpper -> 'W') = 4
 score (toUpper -> 'X') = 8
 score (toUpper -> 'Y') = 4
 score (toUpper -> 'Z') = 10
-score _   = 0
+score _                = 0
 
 scoreString :: String -> Score
 scoreString = foldMap score
@@ -74,13 +77,12 @@ instance Buffer (JoinList (Score, Size) String) where
 
   line       = indexJ
 
-  replaceLine n l j = takeJ (n - 1) j +++ scoreSizeLine l +++ dropJ n j
+  replaceLine n l j | n < numLines j = takeJ n j +++ scoreSizeLine l +++ dropJ (n + 1) j
+                    | otherwise      = j
 
   numLines = getSize . size
 
-  value Empty                     = 0 -- mempty :: Score?
-  value (Single (Score s, _) _  ) = s
-  value (Append (Score s, _) _ _) = s
+  value    = getScore . fst . tag
 
 initialBuffer :: JoinList (Score, Size) String
 initialBuffer = fromString "Type the character L followed the name of a file."
