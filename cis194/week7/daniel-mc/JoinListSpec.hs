@@ -1,6 +1,7 @@
 module JoinListSpec where
 
   import           JoinList
+  import           Scrabble
   import           Sized
   import           Data.Monoid(Sum(..))
 
@@ -34,3 +35,8 @@ module JoinListSpec where
       it "takes items correctly" $
         takeJ 2 (Single (Size 1) "a" +++ Single (Size 1) "b" +++ Single (Size 1) "c")
         `shouldBe` Single (Size 1) "a" +++ Single (Size 1) "b" +++ Empty
+
+    describe "scoreLine" $ do
+      it "creates tree with score correctly" $
+       scoreLine "yay " +++ scoreLine "haskell!"
+       `shouldBe` Append (Score 23) (Single (Score 9) "yay ") (Single (Score 14) "haskell!")

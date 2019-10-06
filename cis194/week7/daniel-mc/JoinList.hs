@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wall #-}
 
 module JoinList
@@ -29,7 +30,7 @@ tag (Append x _ _) = x
 -- Exercise 2
 
 instance (Sized m, Monoid m) => Sized (JoinList m a) where
-  size Empty = {--size--}mempty
+  size Empty = mempty
   size (Single s _  ) = size s
   size (Append s _ _) = size s
 
