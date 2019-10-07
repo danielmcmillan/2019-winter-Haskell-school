@@ -17,3 +17,8 @@ main = hspec $ do
     $ it "should fold all values of a tree"
     $ treeFold (\x -> (+ x) . sum) (Node 1 [Node 2 [Node 4 []], Node 3 []])
     `shouldBe` 10
+
+  describe "maxFun"
+    $          it "should get max fun for test company"
+    $          (getFun . maxFun $ testCompany)
+    `shouldBe` 26

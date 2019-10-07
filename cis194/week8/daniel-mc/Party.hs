@@ -3,6 +3,7 @@
 module Party where
 
 import           Data.Tree
+import           Data.List
 import           Employee
 
 -- Exercise 1
@@ -23,3 +24,27 @@ moreFun = max
 
 treeFold :: (a -> [b] -> b) -> Tree a -> b
 treeFold f Node { rootLabel = a, subForest = ns } = f a . map (treeFold f) $ ns
+
+-- Exercise 3
+getFun :: GuestList -> Fun
+getFun (GL _ f) = f
+
+nextLevel :: Employee -> [(GuestList, GuestList)] -> (GuestList, GuestList)
+nextLevel e gs = (glCons e . foldMap snd $ gs, foldMap (uncurry moreFun) gs)
+
+-- Exercise 4
+maxFun :: Tree Employee -> GuestList
+maxFun = uncurry moreFun . treeFold nextLevel
+
+-- Exercise 5
+parseCompany :: String -> Tree Employee
+parseCompany = read
+
+formatGuestList :: GuestList -> String
+formatGuestList (GL es f) =
+  unlines $ ("Total fun: " ++ show f) : (sort . map empName $ es)
+
+main :: IO ()
+main =
+  readFile "../company.txt"
+    >>= (putStr . formatGuestList . maxFun . parseCompany)
