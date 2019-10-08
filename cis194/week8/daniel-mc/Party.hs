@@ -4,6 +4,7 @@ module Party where
 
 import           Data.Tree
 import           Data.List
+import           Text.Read
 import           Employee
 
 -- Exercise 1
@@ -37,14 +38,18 @@ maxFun :: Tree Employee -> GuestList
 maxFun = uncurry moreFun . treeFold nextLevel
 
 -- Exercise 5
-parseCompany :: String -> Tree Employee
-parseCompany = read
+parseCompany :: String -> Maybe (Tree Employee)
+parseCompany = readMaybe
 
 formatGuestList :: GuestList -> String
 formatGuestList (GL es f) =
   unlines $ ("Total fun: " ++ show f) : (sort . map empName $ es)
 
+handleFailure :: Maybe String -> String
+handleFailure (Just x) = x
+handleFailure Nothing  = "Failed to load guest list\n"
+
 main :: IO ()
 main =
   readFile "../company.txt"
-    >>= (putStr . formatGuestList . maxFun . parseCompany)
+    >>= putStr . handleFailure . (fmap formatGuestList) . (fmap maxFun) . parseCompany
