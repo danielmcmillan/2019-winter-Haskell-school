@@ -2,7 +2,16 @@
    due Monday, 1 April
 -}
 
-module AParser where
+module AParser
+  ( Parser(..)
+  , satisfy
+  , char
+  , posInt
+  , abParser
+  , abParser_
+  , intPair
+  )
+where
 
 import           Control.Applicative
 
@@ -75,4 +84,14 @@ flatMaybe Nothing  = Nothing
 instance Applicative Parser where
   pure a = Parser (\s -> Just (a, s))
   p1 <*> p2 = Parser $ (=<<) f . runParser p1 where f (p1f, rem) = runParser (p1f <$> p2) rem
-  -- p1 <*> p2 = Parser $ ((=<<) . uncurry) (runParser . (<$> p2)) . runParser p1
+
+-- Exercise 3
+
+abParser :: Parser (Char, Char)
+abParser = (,) <$> char 'a' <*> char 'b'
+
+abParser_ :: Parser ()
+abParser_ = () <$ abParser
+
+intPair :: Parser [Integer]
+intPair = (\a b -> [a, b]) <$> posInt <*> (flip const <$> char ' ' <*> posInt)
