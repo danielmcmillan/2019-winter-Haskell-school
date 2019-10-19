@@ -10,6 +10,7 @@ module AParser
   , abParser
   , abParser_
   , intPair
+  , intOrUppercase
   )
 where
 
@@ -94,4 +95,15 @@ abParser_ :: Parser ()
 abParser_ = () <$ abParser
 
 intPair :: Parser [Integer]
-intPair = (\a b -> [a, b]) <$> posInt <*> (flip const <$> char ' ' <*> posInt)
+intPair = (\a b -> [a, b]) <$> posInt <*> (char ' ' *> posInt)
+
+-- Exercise 4
+
+instance Alternative Parser where
+  empty = Parser $ const Nothing
+  (Parser f) <|> (Parser g) = Parser $ \s -> f s <|> g s
+
+-- Exercise 5
+
+intOrUppercase :: Parser ()
+intOrUppercase = () <$ posInt <|> () <$ satisfy isUpper
