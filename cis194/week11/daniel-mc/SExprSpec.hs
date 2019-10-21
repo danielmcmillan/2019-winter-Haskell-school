@@ -34,3 +34,12 @@ main = hspec $ do
     it "should succeed with alpha" $ runParser ident "a1b2c abc" `shouldBe` Just ("a1b2c", " abc")
 
     it "should succeed with single alpha" $ runParser ident "a abc" `shouldBe` Just ("a", " abc")
+
+  describe "parseSExpr" $ do
+    it "should fail with no alphanumeric" $ runParser parseSExpr "  @ " `shouldBe` Nothing
+    it "should fail with empty list" $ runParser parseSExpr "()" `shouldBe` Nothing
+    it "should fail if any in list fail" $ runParser parseSExpr "(1 @)" `shouldBe` Nothing
+
+    it "should only parse one SExpr" $ runParser parseSExpr "1 2" `shouldBe` Just (A (N 1), "2")
+    it "should ignore spaces" $ runParser parseSExpr "  (  2  ab12  )  " `shouldBe` Just
+      (Comb [A $ N 2, A $ I "ab12"], "")

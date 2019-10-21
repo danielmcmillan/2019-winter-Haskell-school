@@ -7,6 +7,9 @@ module SExpr
   , oneOrMore
   , spaces
   , ident
+  , parseSExpr
+  , SExpr(..)
+  , Atom(..)
   )
 where
 
@@ -45,9 +48,18 @@ type Ident = String
 
 -- An "atom" is either an integer value or an identifier.
 data Atom = N Integer | I Ident
-  deriving Show
+  deriving (Show, Eq)
 
 -- An S-expression is either an atom, or a list of S-expressions.
 data SExpr = A Atom
            | Comb [SExpr]
-  deriving Show
+  deriving (Show, Eq)
+
+parseAtom :: Parser Atom
+parseAtom = N <$> posInt <|> I <$> ident
+
+parseSExprList :: Parser [SExpr]
+parseSExprList = char '(' *> oneOrMore parseSExpr <* char ')'
+
+parseSExpr :: Parser SExpr
+parseSExpr = spaces *> (A <$> parseAtom <|> Comb <$> parseSExprList) <* spaces
